@@ -65,11 +65,58 @@ const tabs = () => {
             })
         })
     }
+
     bindTabs(".glazing_block", ".glazing_content", "active");
     bindTabs(".no_click", ".decoration_content > div > div", "after_click");
 
 };
+const forms = () => {
+    let messages = {
+        loading: 'Загрузка...',
+        success: 'Спасибо! Скоро мы с вами свяжемся!',
+        failure: 'Что-то пошло не так...'
+    };
+
+    const statusMessage = document.createElement('div');
+    statusMessage.classList.add('status');
+
+    const formsList = document.querySelectorAll("form");
+
+    formsList.forEach((item, index) => {
+        item.addEventListener("submit", (evt) => {
+            evt.preventDefault();
+            item.appendChild(statusMessage);
+            const request = new XMLHttpRequest();
+            request.open('POST', 'server.php');
+            request.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+
+            const formData = new FormData(item);
+            const obj = {};
+            formData.forEach(function (value, key) {
+                obj[key] = value;
+            });
+            let json = JSON.stringify(obj);
+            request.send(json);
+
+            request.addEventListener('readystatechange', function () {
+                if (request.readyState < 4) {
+                    statusMessage.innerHTML = messages.loading;
+                } else if (request.readyState === 4 && request.status == 200) {
+                    statusMessage.innerHTML = messages.success;
+                } else {
+                    statusMessage.innerHTML = messages.failure;
+                }
+            });
+
+            const inputList = item.querySelectorAll("input");
+            inputList.forEach((item) => {
+                item.value = "";
+            })
+        });
+    })
+};
 window.addEventListener('DOMContentLoaded', () => {
     modals();
     tabs();
+    forms();
 });
