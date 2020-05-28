@@ -1,8 +1,7 @@
 const modals = () => {
-    function bindModal(triggerSelector, modalSelector, closeSelector) {
-        const trigger = document.querySelectorAll(triggerSelector),
-            modal = document.querySelector(modalSelector),
-            close = document.querySelector(closeSelector);
+    function bindModal(triggerSelector, modalSelector, closeSelectors) {
+        const trigger = document.querySelectorAll(triggerSelector);
+        const modal = document.querySelector(modalSelector);
 
         trigger.forEach((item) => {
             item.addEventListener('click', (e) => {
@@ -15,18 +14,17 @@ const modals = () => {
                 // document.body.classList.add('modal-open');
             });
         });
-
-        close.addEventListener('click', () => {
-            modal.style.display = "none";
-            document.body.style.overflow = "";
-            // document.body.classList.remove('modal-open');
+        closeSelectors.forEach((item) => {
+            document.querySelector(item).addEventListener("click", () => {
+                modal.style.display = "none";
+                document.body.style.overflow = "";
+            })
         });
 
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.style.display = "none";
                 document.body.style.overflow = "";
-                // document.body.classList.remove('modal-open');
             }
         });
     }
@@ -38,19 +36,22 @@ const modals = () => {
         }, time);
     }
 
-    bindModal('.popup_engineer_btn', '.popup_engineer', '.popup_engineer .popup_close');
-    bindModal('.phone_link', '.popup', '.popup .popup_close');
+    bindModal('.popup_engineer_btn', '.popup_engineer', ['.popup_engineer .popup_close']);
+    bindModal('.phone_link', '.popup', ['.popup .popup_close']);
+    bindModal(".glazing_price_btn", ".popup_calc", [".popup_calc_close", ".popup_calc_button"]);
+    bindModal(".popup_calc_button", ".popup_calc_profile", [".popup_calc_profile_close", ".popup_calc_profile_button"]);
+    bindModal(".popup_calc_profile_button", ".popup_calc_end", [".popup_calc_end_close"]);
     // showModalByTime('.popup', 60000);
 };
 const tabs = () => {
-    function bindTabs(slidesSelector, contentSelector, activeClass) {
+    function bindTabs(slidesSelector, contentSelector, activeClass, display) {
         const sliders = document.querySelectorAll(slidesSelector);
         const content = document.querySelectorAll(contentSelector);
 
         function showTab(indexTab) {
             content.forEach((item, index) => {
                 if (index === indexTab) {
-                    item.style.display = "block";
+                    item.style.display = display;
                     sliders[index].classList.add(activeClass);
                 } else {
                     item.style.display = "none";
@@ -64,10 +65,12 @@ const tabs = () => {
                 showTab(index);
             })
         })
+        showTab(0);
     }
 
-    bindTabs(".glazing_block", ".glazing_content", "active");
-    bindTabs(".no_click", ".decoration_content > div > div", "after_click");
+    bindTabs(".glazing_block", ".glazing_content", "active", "block");
+    bindTabs(".no_click", ".decoration_content > div > div", "after_click", "block");
+    bindTabs(".balcon_icons_img", ".big_img > img", "do_image_more", "inline");
 
 };
 const forms = () => {
@@ -144,6 +147,9 @@ const timer = (deadline) => {
 
     setInterval(setTime, 1000);
 };
+const calculate = () => {
+    
+}
 window.addEventListener('DOMContentLoaded', () => {
     modals();
     tabs();
