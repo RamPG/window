@@ -61,7 +61,7 @@ const tabs = () => {
         }
 
         sliders.forEach((item, index) => {
-            item.addEventListener("click", (evt) => {
+            item.addEventListener("click", () => {
                 showTab(index);
             })
         })
@@ -73,51 +73,53 @@ const tabs = () => {
     bindTabs(".balcon_icons_img", ".big_img > img", "do_image_more", "inline");
 
 };
-const forms = () => {
+const postRequest = (data, formDoc) => {
+    const clearInputs = () => {
+        formDoc.querySelectorAll("input").forEach((item) => {
+            item.value = "";
+        })
+    }
     let messages = {
         loading: 'Загрузка...',
         success: 'Спасибо! Скоро мы с вами свяжемся!',
         failure: 'Что-то пошло не так...'
     };
-
     const statusMessage = document.createElement('div');
     statusMessage.classList.add('status');
+    formDoc.appendChild(statusMessage);
+    const postData = async (url, data) => {
+        statusMessage.textContent = messages.loading;
+        let res = await fetch(url, {
+            method: "POST",
+            body: data
+        });
 
-    const formsList = document.querySelectorAll("form");
-
-    formsList.forEach((item, index) => {
+        return await res.text();
+    };
+    postData('server.php', data)
+        .then(() => {
+            statusMessage.textContent = messages.success;
+        })
+        .catch(() => statusMessage.textContent = messages.failure)
+        .finally(() => {
+            clearInputs();
+            setTimeout(() => {
+                statusMessage.remove();
+            }, 5000);
+        });
+};
+const forms = (formSelector) => {
+    const statusMessage = document.createElement('div');
+    statusMessage.classList.add('status');
+    const formsList = document.querySelectorAll(formSelector);
+    formsList.forEach((item) => {
         item.addEventListener("submit", (evt) => {
             evt.preventDefault();
-            item.appendChild(statusMessage);
-            const request = new XMLHttpRequest();
-            request.open('POST', 'server.php');
-            request.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-
-            const formData = new FormData(item);
-            const obj = {};
-            formData.forEach(function (value, key) {
-                obj[key] = value;
-            });
-            let json = JSON.stringify(obj);
-            request.send(json);
-
-            request.addEventListener('readystatechange', function () {
-                if (request.readyState < 4) {
-                    statusMessage.innerHTML = messages.loading;
-                } else if (request.readyState === 4 && request.status == 200) {
-                    statusMessage.innerHTML = messages.success;
-                } else {
-                    statusMessage.innerHTML = messages.failure;
-                }
-            });
-
-            const inputList = item.querySelectorAll("input");
-            inputList.forEach((item) => {
-                item.value = "";
-            })
+            const formData = new FormData(item)
+            postRequest(formData, item);
         });
     })
-};
+}
 const timer = (deadline) => {
     const deadlineParse = new Date(deadline);
     const daysElement = document.querySelector("#days");
@@ -148,11 +150,51 @@ const timer = (deadline) => {
     setInterval(setTime, 1000);
 };
 const calculate = () => {
-    
+    const formBalconyDoc = document.querySelectorAll(".balcon_icons_img");
+    const widthBalconyDoc = document.querySelector("#width");
+    const heightBalconyDoc = document.querySelector("#height");
+    const viewBalconyDoc = document.querySelector("#view_type");
+    const coldBalconyDoc = document.querySelector("#cold");
+    const warmBalconyDoc = document.querySelector("#warm");
+    const buttonCalc = document.querySelector(".button_calc");
+    const nameDoc = document.querySelector(".calc_name");
+    const phoneDoc = document.querySelector(".calc_phone");
+    const dataCalc = {};
+
+
+    buttonCalc.addEventListener("click", (evt) => {
+        evt.preventDefault();
+        for (let i = 0; i < formBalconyDoc.length; i++) {
+            if (formBalconyDoc[i].classList.contains("do_image_more")) {
+                dataCalc["form"] = i;
+                formBalconyDoc[i].classList.remove("do_image_more")
+                formBalconyDoc[0].classList.add("do_image_more");
+                break
+            }
+        }
+        dataCalc["width"] = widthBalconyDoc.value;
+        widthBalconyDoc.value = "";
+        dataCalc["height"] = heightBalconyDoc.value;
+        heightBalconyDoc.value = ""
+        dataCalc["view"] = viewBalconyDoc.value;
+        viewBalconyDoc.value = "tree";
+        dataCalc["cold"] = coldBalconyDoc.checked;
+        coldBalconyDoc.checked = false;
+        dataCalc["warm"] = warmBalconyDoc.checked;
+        warmBalconyDoc.value = false;
+        dataCalc["name"] = nameDoc.value;
+        nameDoc.value = "";
+        dataCalc["phone"] = phoneDoc.value;
+        phoneDoc.value = "";
+        postRequest(JSON.stringify(dataCalc), document.querySelector(".calc_form"));
+
+    })
+
 }
 window.addEventListener('DOMContentLoaded', () => {
     modals();
     tabs();
-    forms();
+    forms("form");
+    calculate();
     timer("2020-6-30");
 });
